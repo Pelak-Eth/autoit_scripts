@@ -1,0 +1,142 @@
+#include <Excel.au3>
+#include <IE.au3>
+#include <File.au3>
+#include <String.au3>
+#include <Array.au3>
+;---------------------------------
+;Global Variables
+;---------------------------------
+Global $sFilePath1 = @ScriptDir & "\eligible ptns.xlsx" ;This file should already exist
+Global $oExcel = _ExcelBookOpen($sFilePath1)
+For $row = 234 to 271 Step 1; col_1 = name, col_2 = acc#
+  Global $global_row = $row
+	Local $lastname1 = _ExcelReadCell($oExcel, $row, 1)
+	Local $strip_no = (StringLen($lastname1) - 4)
+	Global $lastname = StringTrimRight($lastname1, $strip_no)
+	Global $accno = _ExcelReadCell($oExcel, $row, 2)
+	Call("open_acc_bypass", $lastname, $accno)
+Next
+	MsgBox(0, "Status: ", "FINISHED at " & $global_row)
+	Exit
+;----------------------------------------------------------------------------------------------------------
+;Function Start: get_ptns_from_acc
+;Input: assumes account is open, see open_acc_bypass
+;writes cleaned ptns, plan type, and if credit union member to excel sheet
+;----------------------------------------------------------------------------------------------------------
+Func get_ptns_from_acc()
+Local $write_arr[7]
+$oIEACC = _IEAttach("Account Overview")
+If @error = $_IEStatus_NoMatch Then
+	Sleep(1000)
+	$oIEACC = _IEAttach("Account Overview")
+Endif
+$oTable = _IETableGetCollection($oIEACC, 5)
+$ptnarrays = _IETableWriteToArray($oTable, True)
+$ptn_all = $ptnarrays[0][0]
+$ptn_1d_arr = StringSplit($ptn_all, "(")
+Local $ptn_arr_len = Ubound($ptn_1d_arr)
+For $i = 2 to ($ptn_arr_len - 1); ptns start at [2]
+	$aptn = $ptn_1d_arr[$i]
+	_ArrayPush($write_arr, (StringRegExpReplace($aptn, "[a-zA-Z()-\s]", "")), 1)
+	_ExcelWriteArray($oExcel, $global_row, 5, $write_arr, 0);write cleaned ptn to excel sheet
+Next
+local $accinfo = _IEBodyReadHTML($oIEACC)
+If StringInStr($accinfo, "Everything Data") And StringInStr($accinfo, "Credit Union") Then
+	_ExcelWriteCell($oExcel, "DATA / CU", $global_row, 3);write Data / CU to col 3, global_row
+ElseIf StringInStr($accinfo, "Everything Messaging") And StringInStr($accinfo, "Credit Union") Then
+	_ExcelWriteCell($oExcel, "Messaging / CU", $global_row, 3);write Messaging / CU to col 3, global_row
+ElseIf StringInStr($accinfo, "Everything Data") Then
+	_ExcelWriteCell($oExcel, "DATA", $global_row, 3)
+ElseIf StringInStr($accinfo, "Everything Messaging") Then
+	_ExcelWriteCell($oExcel, "Messaging", $global_row, 3)
+Else
+	_ExcelWriteCell($oExcel, "TALK", $global_row, 3)
+EndIf
+;-----------------------------------------------------
+;Exit account overview
+;-----------------------------------------------------
+$oexit = _IEAttach("Account Overview")
+_IENavigate($oexit, "javascript:dialog('https://dara.sprint.com/uniquesig8a944deffe2308894cbf3a294ac50cab/uniquesig1/exitAccountInit.do?userAction=1','width=350,height=380,resizable=1',true)", 0)
+Sleep(1000)
+ControlSend("Sprint -- Webpage Dialog", "","[CLASSNN:Internet Explorer_Server1]", "{TAB}" & "{ENTER}")
+Sleep(2000)
+EndFunc
+;------------------------------------------------------------------------
+;Function Start: open_acc_bypass
+;Input: $lastname, $acc,
+;Returns: opened account
+;------------------------------------------------------------------------
+Func open_acc_bypass($lastname1, $accno)
+$oIE = _IEAttach("Customer Main")
+$oForm = _IEGetObjById($oIE, "customerLookupForm")
+$oName = _IEFormElementGetObjByName($oForm, "lastname")
+_IEFormElementSetValue($oName, $lastname1)
+$oSelect = _IEFormElementGetObjByName($oForm, "option3")
+_IEFormElementOptionselect($oSelect, "Account Number" , 1, "byText")
+$oAcc = _IEFormElementGetObjByName($oForm, "option3Value")
+_IEFormElementSetValue($oAcc, $accno)
+_IEFormSubmit($oForm, 0)
+Sleep(4000)
+;###############################################################################################
+;Handle Business accounts / No data found error / Customer already exist with same SSN error  ##
+;NO signInConfirmationForm for these error types											  ##
+;TODO: properly access business accounts, MEH!!												  ##
+;###############################################################################################
+Local $errorbody = _IEBodyReadHTML($oIE)
+If StringInStr($errorbody, "No data found") Then
+	Return
+ElseIf StringInStr($errorbody, "Customer already exist with the same SSN") Then
+	Return
+ElseIf StringInStr($errorbody, "The account is suspended") Then
+	Return
+EndIf
+;###############################
+;bypass security dialog box   ##
+;###############################
+$oPopup = _IEAttach("Sign In Confirmation -- Webpage Dialog", "embedded")
+If @error = $_IEStatus_NoMatch Then
+	Sleep(1000)
+	$oPopup = _IEAttach("Sign In Confirmation -- Webpage Dialog", "embedded")
+Endif
+_IELinkClickByIndex($oPopup, 1); clicks bypass link
+Sleep(1000)
+;#########################################################
+;input ID and expiration date to bypass and submit form ##
+;#########################################################
+$oForm = _IEGetObjById($oPopup, "signInConfirmationForm")
+$oID = _IEFormElementGetObjByName($oForm, "idNumber")
+_IEFormElementSetValue($oID, "123123")
+$oEXP = _IEFormElementGetObjByName($oForm, "idExpirationDate")
+_IEFormElementSetValue($oEXP, "06/12/2016")
+$oSelect = _IEFormElementGetObjByName($oForm, "idType")
+_IEFormElementOptionselect($oSelect, "State ID #", 1, "bytext")
+;_IEFormElementOptionselect($oForm, "US Driver License", 1, "bytext")
+Sleep(500)
+;#########################################################
+;dirty ish method to click hidden OK javascript button  ##
+;#########################################################
+ControlSend("Sign In Confirmation -- Webpage Dialog", "","[CLASSNN:Internet Explorer_Server1]", "{TAB}" & "{TAB}" & "{TAB}" & "{TAB}" & "{TAB}" & "{TAB}" & "{ENTER}")
+;#####################
+;Acc should be open ##
+;#####################
+Sleep(5000)
+;############################################
+;Handle lookup errors					   ##
+;Errors occur after signInConfirmationForm ##
+;############################################
+If isObj($oIE) Then
+	Local $body = _IEBodyReadHTML($oIE)
+	If StringInStr($body, "The transaction may not be performed") Then; past due customer
+	_ExcelWriteCell($oExcel, "PAST DUE!", $global_row, 4)
+	Return
+	ElseIf StringInStr($body, "Ban status") Then; non existent customer
+	Return
+	ElseIf StringInStr($body, "No data found") Then; business acc or other non existent error
+	MsgBox(0, "Account is: ", "a business or does not exist!")
+	;add code to change to business lookup, recode find ptns too...., MEH!!
+	Return
+Else
+	call("get_ptns_from_acc")
+	EndIf
+EndIf
+EndFunc
