@@ -5,23 +5,27 @@
 #include <GUIConstantsEx.au3>
 #include <StaticConstants.au3>
 #include <WindowsConstants.au3>
+#include <Misc.au3>
+If _Singleton("Login to DARA and SNAP", 0) = 0 Then
+    Exit
+EndIf
 #Region ; GUI START
-$Form1_1 = GUICreate("Form1", @DesktopWidth, @DesktopHeight, 0, 0, $WS_POPUP, BitOR($WS_EX_TOPMOST, $WS_EX_TOOLWINDOW))
+$Form1_1 = GUICreate("Form1", (@DesktopWidth-70), @DesktopHeight, 0, 0, $WS_SYSMENU, BitOR($WS_EX_TOPMOST, $WS_EX_TOOLWINDOW))
 WinSetTrans($Form1_1, "", 215)
 $FirstName = GUICtrlCreateInput("Josh", 368, 80, 137, 37)
 GUICtrlSetFont(-1, 18, 400, 0, "MS Sans Serif")
 $LastName = GUICtrlCreateInput("Pelak", 667, 80, 145, 37)
 GUICtrlSetFont(-1, 18, 400, 0, "MS Sans Serif")
-$DARA_1_user = GUICtrlCreateInput("XXXXXXXXX", 515, 144, 297, 37)
+$DARA_1_user = GUICtrlCreateInput("WV171859", 515, 144, 297, 37)
 GUICtrlSetFont(-1, 18, 400, 0, "MS Sans Serif")
-$DARA_1_pass = GUICtrlCreateInput("XXXXXXXXX", 515, 192, 297, 37, BitOR($GUI_SS_DEFAULT_INPUT,$ES_PASSWORD))
+$DARA_1_pass = GUICtrlCreateInput("Soccer1234", 515, 192, 297, 37, BitOR($GUI_SS_DEFAULT_INPUT,$ES_PASSWORD))
 GUICtrlSetFont(-1, 18, 400, 0, "MS Sans Serif")
 $Checkbox1 = GUICtrlCreateCheckbox("Update Password?", 817, 192, 193, 33)
 GUICtrlSetFont(-1, 14, 400, 0, "MS Sans Serif")
 GUICtrlSetBkColor(-1, 0xB9D1EA)
-$DARA_2_user = GUICtrlCreateInput("XXXXXXXX", 515, 240, 297, 37)
+$DARA_2_user = GUICtrlCreateInput("VG639336", 515, 240, 297, 37)
 GUICtrlSetFont(-1, 18, 400, 0, "MS Sans Serif")
-$DARA_2_pass = GUICtrlCreateInput("XXXXXXXX", 515, 296, 297, 37, BitOR($GUI_SS_DEFAULT_INPUT,$ES_PASSWORD))
+$DARA_2_pass = GUICtrlCreateInput("Soccer99", 515, 296, 297, 37, BitOR($GUI_SS_DEFAULT_INPUT,$ES_PASSWORD))
 GUICtrlSetFont(-1, 18, 400, 0, "MS Sans Serif")
 $Checkbox2 = GUICtrlCreateCheckbox("Update Password?", 817, 297, 193, 33)
 GUICtrlSetFont(-1, 14, 400, 0, "MS Sans Serif")
@@ -47,7 +51,7 @@ GUICtrlSetBkColor(-1, 0xB9D1EA)
 $Label6 = GUICtrlCreateLabel("Last Name:", 527, 80, 141, 33)
 GUICtrlSetFont(-1, 18, 400, 0, "MS Sans Serif")
 GUICtrlSetBkColor(-1, 0xB9D1EA)
-$Label7 = GUICtrlCreateLabel("AUTOMATED DARA AND SNAP LOGIN GUI | BETA VER: 0.9", 288, 32, 600, 28)
+$Label7 = GUICtrlCreateLabel("AUTOMATED DARA AND SNAP LOGIN GUI | BETA VER: 0.99", 288, 32, 600, 28)
 GUICtrlSetFont(-1, 14, 400, 0, "MS Sans Serif")
 $Progress1 = GUICtrlCreateProgress(240, 512, 1073, 73)
 $Label8 = GUICtrlCreateLabel("LOG IN PROGRESS:", 624, 456, 309, 41)
@@ -58,7 +62,7 @@ GUISetState(@SW_SHOW)
 #EndRegion ; GUI END
 
 While 1
-  $nMsg = GUIGetMsg()
+	$nMsg = GUIGetMsg()
 	Switch $nMsg
 		Case $GUI_EVENT_CLOSE
 			Exit
@@ -94,10 +98,8 @@ GUICtrlSetData($Progress1, 1)
 		Global $failed = 1
 		Return
 	EndIf
-;ShellExecute("iexplore.exe")
 Run("C:\Program Files\Internet Explorer\iexplore.exe")
-WinWait("DARA", "", 20)
-Sleep(3000)
+WinWait("Sprint", "", 10)
 $r = WinWait("DARA", "", 20)
 	If $r = 0 Then
 		Global $failed = 1
@@ -124,8 +126,8 @@ WinWait("Choose a digital certificate")
 GUICtrlSetData($Progress1, 25)
 Sleep(1000)
 ControlSend("Choose a digital certificate", "", "[CLASSNN:Button2]", "{ENTER}")
+WinWait("Sprint", "", 10)
 WinWait("DARA", "", 20)
-Sleep(3000)
 $e = WinWait("DARA", "", 20)
 	If $e = 0 Then
 		Global $failed = 1
@@ -144,7 +146,6 @@ $e = WinWait("DARA", "", 20)
 		_IEFormElementSetValue($user_name2, $DARA_user_2)
 		$password2 = _IEFormElementGetObjByName($oForm2, "password")
 		_IEFormElementSetValue($password2, $DARA_pass_2)
-		Sleep(1000)
 		_IEFormSubmit($oForm2, 0)
 		GUICtrlSetData($Progress1, 50)
 	EndIf
@@ -179,4 +180,11 @@ $odaralogin2 = _IEAttach("Sign in", "WindowTitle")
 		GUICtrlSetData($Progress1, 100)
 		Global $failed = 0
 	EndIf
+;###############################
+;Close Popup Window if exists ##
+;###############################
+If WinExists("New Edition") Then
+	$popup = _IEAttach("New Edition")
+	_IEQuit($popup)
+EndIf
 EndFunc
