@@ -6,6 +6,9 @@
 #include <StaticConstants.au3>
 #include <WindowsConstants.au3>
 #include <Misc.au3>
+;##################################################################
+;### SET YOUR HOMEPAGE IN INTERNET EXPLORER TO DARA LOGIN PAGE!! ##
+;Example: "https://dara.sprint.com/uniquesigaXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/uniquesig1/secured_site/index_frame.jsp"
 ;###################################################
 ;DEFAULT GUI and CONFIGURATION VARIABLES############
 $userfirstname = "XXXXXXXXXX"
