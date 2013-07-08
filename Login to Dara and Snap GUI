@@ -6,26 +6,39 @@
 #include <StaticConstants.au3>
 #include <WindowsConstants.au3>
 #include <Misc.au3>
+;###################################################
+;DEFAULT GUI and CONFIGURATION VARIABLES############
+$userfirstname = "XXXXXXXXXX"
+$userlastname = "XXXXXXXXXX"
+$firstdarauser = "XXXXXXXX"
+$firstdarapass = "XXXXXXXXXX"
+$seconddarauser = "XXXXXXXX"
+$seconddarapass = "XXXXXXXXXX"
+$snapurl = "https://dara.sprint.com/uniquesigXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/uniquesig1"
+;###################################################
+;##########################
+;Allow only one instance ##
+;##########################
 If _Singleton("Login to DARA and SNAP", 0) = 0 Then
     Exit
 EndIf
 #Region ; GUI START
 $Form1_1 = GUICreate("Form1", (@DesktopWidth-70), @DesktopHeight, 0, 0, $WS_SYSMENU, BitOR($WS_EX_TOPMOST, $WS_EX_TOOLWINDOW))
 WinSetTrans($Form1_1, "", 215)
-$FirstName = GUICtrlCreateInput("Josh", 368, 80, 137, 37)
+$FirstName = GUICtrlCreateInput($userfirstname, 368, 80, 137, 37)
 GUICtrlSetFont(-1, 18, 400, 0, "MS Sans Serif")
-$LastName = GUICtrlCreateInput("Pelak", 667, 80, 145, 37)
+$LastName = GUICtrlCreateInput($userlastname, 667, 80, 145, 37)
 GUICtrlSetFont(-1, 18, 400, 0, "MS Sans Serif")
-$DARA_1_user = GUICtrlCreateInput("WV171859", 515, 144, 297, 37)
+$DARA_1_user = GUICtrlCreateInput($firstdarauser, 515, 144, 297, 37)
 GUICtrlSetFont(-1, 18, 400, 0, "MS Sans Serif")
-$DARA_1_pass = GUICtrlCreateInput("Soccer1234", 515, 192, 297, 37, BitOR($GUI_SS_DEFAULT_INPUT,$ES_PASSWORD))
+$DARA_1_pass = GUICtrlCreateInput($firstdarapass, 515, 192, 297, 37, BitOR($GUI_SS_DEFAULT_INPUT,$ES_PASSWORD))
 GUICtrlSetFont(-1, 18, 400, 0, "MS Sans Serif")
 $Checkbox1 = GUICtrlCreateCheckbox("Update Password?", 817, 192, 193, 33)
 GUICtrlSetFont(-1, 14, 400, 0, "MS Sans Serif")
 GUICtrlSetBkColor(-1, 0xB9D1EA)
-$DARA_2_user = GUICtrlCreateInput("VG639336", 515, 240, 297, 37)
+$DARA_2_user = GUICtrlCreateInput($seconddarauser, 515, 240, 297, 37)
 GUICtrlSetFont(-1, 18, 400, 0, "MS Sans Serif")
-$DARA_2_pass = GUICtrlCreateInput("Soccer99", 515, 296, 297, 37, BitOR($GUI_SS_DEFAULT_INPUT,$ES_PASSWORD))
+$DARA_2_pass = GUICtrlCreateInput($seconddarapass, 515, 296, 297, 37, BitOR($GUI_SS_DEFAULT_INPUT,$ES_PASSWORD))
 GUICtrlSetFont(-1, 18, 400, 0, "MS Sans Serif")
 $Checkbox2 = GUICtrlCreateCheckbox("Update Password?", 817, 297, 193, 33)
 GUICtrlSetFont(-1, 14, 400, 0, "MS Sans Serif")
@@ -155,7 +168,7 @@ WinWait("Security Information")
 ControlSend("Security Information", "", "[CLASSNN:Button1]", "{ENTER}")
 GUICtrlSetData($Progress1, 75)
 $oSnap = _IEAttach("Sprint Nextel Sales Portal", "WindowTitle")
-__IENavigate($oSnap, "https://dara.sprint.com/uniquesig8a944deffe2308894cbf3a294ac50cab/uniquesig1", 0, 2048)
+__IENavigate($oSnap, $snapurl, 0, 2048)
 $t = WinWait("Sign in", "", 20)
 	If $t = 0 Then
 		Global $failed = 0
