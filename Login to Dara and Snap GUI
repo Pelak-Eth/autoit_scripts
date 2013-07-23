@@ -115,22 +115,22 @@ GUICtrlSetData($Progress1, 1)
 		Return
 	EndIf
 Run("C:\Program Files\Internet Explorer\iexplore.exe")
-WinWait("Sprint", "", 10)
+;WinWait("Sprint", "", 10)
+WinWait("DARA", "", 20)
 $r = WinWait("DARA", "", 20)
 	If $r = 0 Then
 		Global $failed = 1
-		MsgBox(262144, "Timed out", "RESTARTING LOGIN NOW", 2)
+		MsgBox(262144, "Timed out @ 1ST Login", "RESTARTING LOGIN NOW", 2)
 		Return
 	ElseIf $r <> 0 Then
 		GUICtrlSetData($Progress1, 5)
 		$odaralogin = _IEAttach("DARA", "WindowTitle")
+		local $text1 = _IEBodyReadHTML($odaralogin)
+		Do
+			Sleep(500)
+			local $text1 = _IEBodyReadHTML($odaralogin)
+		Until StringInStr($text1, "previously ISCPortal"); first text
 		$oForm1 = _IEGetObjById($odaralogin, "form1")
-		Sleep(2000)
-			If @error <> 0 Then
-				Global $failed = 1
-				MsgBox(262144, "ERROR 3 or 7 Encountered!", "RESTARTING LOGIN NOW", 2)
-				Return
-			EndIf
 		$user_name = _IEFormElementGetObjByName($oForm1, "user_name")
 		_IEFormElementSetValue($user_name, $DARA_user_1)
 		$password = _IEFormElementGetObjByName($oForm1, "password")
@@ -142,22 +142,29 @@ WinWait("Choose a digital certificate")
 GUICtrlSetData($Progress1, 25)
 Sleep(1000)
 ControlSend("Choose a digital certificate", "", "[CLASSNN:Button2]", "{ENTER}")
-WinWait("Sprint", "", 10)
+;~ $d = WinWait("Expiring Password", "", 5); detects when password change exists, exits GUI
+;~ 	If $d = 0 Then
+;~ 		;do nothing
+;~ 	ElseIf $d <> 0 Then
+;~ 	Global $failed = 0
+;~ 	Exit
+;~ 	EndIf
+;WinWait("Sprint", "", 5)
 WinWait("DARA", "", 20)
 $e = WinWait("DARA", "", 20)
 	If $e = 0 Then
 		Global $failed = 1
-		MsgBox(262144, "Timed out", "RESTARTING LOGIN NOW", 2)
+		MsgBox(262144, "Timed out @ 2ND Login", "RESTARTING LOGIN NOW", 2)
 		Return
 	ElseIf $e <> 0 Then
 		$odaralogin2 = _IEAttach("DARA", "WindowTitle")
+		local $text2 = _IEBodyReadHTML($odaralogin2)
+		Do
+			Sleep(500)
+			local $text2 = _IEBodyReadHTML($odaralogin2)
+		Until StringInStr($text2, "Indirect"); second text
 		GUICtrlSetData($Progress1, 38)
 		$oForm2 = _IEGetObjById($odaralogin2, "form1")
-			If @error <> 0 Then
-				Global $failed = 1
-				MsgBox(262144, "ERROR 3 or 7 Encountered!", "RESTARTING LOGIN NOW", 2)
-				Return
-			EndIf
 		$user_name2 = _IEFormElementGetObjByName($oForm2, "user_name")
 		_IEFormElementSetValue($user_name2, $DARA_user_2)
 		$password2 = _IEFormElementGetObjByName($oForm2, "password")
@@ -165,6 +172,13 @@ $e = WinWait("DARA", "", 20)
 		_IEFormSubmit($oForm2, 0)
 		GUICtrlSetData($Progress1, 50)
 	EndIf
+;~ $p = WinWait("Expiring Password", "", 5); detects when password change exists, exits GUI
+;~ 	If $p = 0 Then
+;~ 		;do nothing
+;~ 	ElseIf $p <> 0 Then
+;~ 	Global $failed = 0
+;~ 	Exit
+;~ 	EndIf
 WinWait("Sprint Nextel Sales Portal")
 GUICtrlSetData($Progress1, 62)
 WinWait("Security Information")
@@ -172,7 +186,7 @@ ControlSend("Security Information", "", "[CLASSNN:Button1]", "{ENTER}")
 GUICtrlSetData($Progress1, 75)
 $oSnap = _IEAttach("Sprint Nextel Sales Portal", "WindowTitle")
 __IENavigate($oSnap, $snapurl, 0, 2048)
-$t = WinWait("Sign in", "", 20)
+$t = WinWait("Sign in", "", 30)
 	If $t = 0 Then
 		Global $failed = 0
 		MsgBox(262144, "Timed out", "SNAP NOT LOGGED IN", 2)
@@ -204,3 +218,9 @@ If WinExists("New Edition") Then
 	_IEQuit($popup)
 EndIf
 EndFunc
+; UNUSED SNIPPET, Use for handling errors with finding objects
+;~ 			If @error <> 0 Then
+;~ 				Global $failed = 1
+;~ 				MsgBox(262144, "ERROR 3 or 7 Encountered!", "RESTARTING LOGIN NOW", 2)
+;~ 				Return
+;~ 			EndIf
