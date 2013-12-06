@@ -1,3 +1,17 @@
+; *  Copyright 2013 by Josh Pelak <joshpelak@gmail.com>
+; *
+; * Cellphone4U Customer Database and related code is free software: you can redistribute
+; * it and/or modify it under the terms of the GNU General Public
+; * License as published by the Free Software Foundation, either
+; * version 3 of the License, or (at your option) any later version.
+; *
+; * Cellphone4U Customer Database and related code is distributed in the hope that it will
+; * be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+; * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; * GNU General Public License for more details.
+; *
+; * You should have received a copy of the GNU General Public License
+; * along with Cellphone4U Customer Database and related code.  If not, see <http://www.gnu.org/licenses/>.
 #include <File.au3>
 #include <IE.au3>
 #include <ButtonConstants.au3>
@@ -18,7 +32,6 @@ $firstdarapass = "XXXXXXXXXX"
 $seconddarauser = "XXXXXXXX"
 $seconddarapass = "XXXXXXXXXX"
 $snapurl = "https://dara.sprint.com/uniquesigXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/uniquesig1"
-;###################################################
 ;##########################
 ;Allow only one instance ##
 ;##########################
@@ -67,7 +80,7 @@ GUICtrlSetBkColor(-1, 0xB9D1EA)
 $Label6 = GUICtrlCreateLabel("Last Name:", 527, 80, 141, 33)
 GUICtrlSetFont(-1, 18, 400, 0, "MS Sans Serif")
 GUICtrlSetBkColor(-1, 0xB9D1EA)
-$Label7 = GUICtrlCreateLabel("AUTOMATED DARA AND SNAP LOGIN GUI | BETA VER: 0.99", 288, 32, 600, 28)
+$Label7 = GUICtrlCreateLabel("AUTOMATED DARA AND SNAP LOGIN GUI | BETA VER: 1.00", 288, 32, 600, 28)
 GUICtrlSetFont(-1, 14, 400, 0, "MS Sans Serif")
 $Progress1 = GUICtrlCreateProgress(240, 512, 1073, 73)
 $Label8 = GUICtrlCreateLabel("LOG IN PROGRESS:", 624, 456, 309, 41)
@@ -84,10 +97,10 @@ While 1
 			Exit
 		Case $Checkbox1
 			$DARA_pass_1 = GUICtrlRead($DARA_1_pass)
-			_FileWriteToLine("C:\Users\Cellphone4U\Desktop\Dropbox\CELLPHONE4U\SCRIPTS - DISREGARD\Login to DARA and SNAP", 17, "$DARA_1_pass = GUICtrlCreateInput('"&$DARA_pass_1&"', 515, 192, 297, 37, BitOR($GUI_SS_DEFAULT_INPUT,$ES_PASSWORD", 1)
+			;_FileWriteToLine() @TODO make config / passwords file
 		Case $Checkbox2
 			$DARA_pass_2 = GUICtrlRead($DARA_2_pass)
-			_FileWriteToLine("C:\Users\Cellphone4U\Desktop\Dropbox\CELLPHONE4U\SCRIPTS - DISREGARD\Login to DARA and SNAP", 24, "$DARA_2_pass = GUICtrlCreateInput('"&$DARA_pass_2&"', 515, 296, 297, 37, BitOR($GUI_SS_DEFAULT_INPUT,$ES_PASSWORD)", 1)
+			;_FileWriteToLine() @TODO make config / passwords file
 		Case $Submit
 			local $failed = 0
 			Global $FirstName1 = GUICtrlRead($FirstName)
@@ -114,7 +127,7 @@ GUICtrlSetData($Progress1, 1)
 		Global $failed = 1
 		Return
 	EndIf
-Run("C:\Program Files\Internet Explorer\iexplore.exe")
+Run("C:\Program Files (x86)\Internet Explorer\iexplore.exe")
 ;WinWait("Sprint", "", 10)
 WinWait("DARA", "", 20)
 $r = WinWait("DARA", "", 20)
@@ -179,16 +192,16 @@ $e = WinWait("DARA", "", 20)
 ;~ 	Global $failed = 0
 ;~ 	Exit
 ;~ 	EndIf
-WinWait("Sprint Nextel Sales Portal")
-GUICtrlSetData($Progress1, 62)
-WinWait("Security Information")
-ControlSend("Security Information", "", "[CLASSNN:Button1]", "{ENTER}")
+WinWait("Home")
+;GUICtrlSetData($Progress1, 62)
+;WinWait("Security Information")
+;ControlSend("Security Information", "", "[CLASSNN:Button1]", "{ENTER}")
 GUICtrlSetData($Progress1, 75)
-$oSnap = _IEAttach("Sprint Nextel Sales Portal", "WindowTitle")
+$oSnap = _IEAttach("Home", "WindowTitle")
 __IENavigate($oSnap, $snapurl, 0, 2048)
 $t = WinWait("Sign in", "", 30)
 	If $t = 0 Then
-		Global $failed = 0
+		Global $failed = 0; DO NOT CLOSE IE AND RESTART, JUST EXIT SCRIPT
 		MsgBox(262144, "Timed out", "SNAP NOT LOGGED IN", 2)
 		Exit
 	EndIf
