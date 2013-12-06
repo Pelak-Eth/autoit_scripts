@@ -1,0 +1,84 @@
+; *  Copyright 2013 by Josh Pelak <joshpelak@gmail.com>
+; *
+; * Cellphone4U Customer Database and related code is free software: you can redistribute
+; * it and/or modify it under the terms of the GNU General Public
+; * License as published by the Free Software Foundation, either
+; * version 3 of the License, or (at your option) any later version.
+; *
+; * Cellphone4U Customer Database and related code is distributed in the hope that it will
+; * be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+; * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; * GNU General Public License for more details.
+; *
+; * You should have received a copy of the GNU General Public License
+; * along with Cellphone4U Customer Database and related code.  If not, see <http://www.gnu.org/licenses/>.
+#include <Excel.au3>
+#include <IE.au3>
+#include <File.au3>
+#include <String.au3>
+#include <Array.au3>
+#include <Word.au3>
+;################################################################
+;Weak password protect, CLOSES PROGRAM IF YOU DON'T KNOW WHAT YOUR DOING!!!
+$check_allowed = InputBox("Enter Password to Execute Program: ", "Enter Password to Execute Program: ", "", "*")
+If $check_allowed == "paS1qDjuzu" Then
+	;do nothing, allowed
+Else
+	MsgBox(0, "NOT ALLOWED!", "NOT ALLOWED!", 3)
+	Exit
+EndIf
+;#################################################################
+;#############################################
+;Global Variables:  					    ##
+;											##
+Global $row = 2;SET STARTING ROW,Usually 2  ##
+Global $rowend = 789; SET ENDING ROW    789 ##
+Global $sFilePath1 = @ScriptDir & "\Master Eligible PTNS.xlsx"; "\Eligible Business PTNS.xlsx" ;This file should already exist
+Global $oExcel = _ExcelBookOpen($sFilePath1);#
+Local $counter = 0
+While $row < $rowend;
+	For $col = 4 to 18 Step 1;
+		Local $CellValue = _ExcelReadCell($oExcel, $row, $col)
+			If $CellValue == "" Then
+				ExitLoop
+			EndIf
+		;MsgBox(0, "Cell Length = ", StringLen($CellValue), 1)
+			If StringInStr($CellValue, "Eligible Now") Then
+				$counter = ($counter + 1)
+				;MsgBox(0, "Counter = ", $counter, 1)
+			EndIf
+				If $counter = 0 Then
+					_ExcelWriteCell($oExcel, "0", $row, 23)
+				ElseIf $counter = 1 Then
+					_ExcelWriteCell($oExcel, "1", $row, 23)
+				ElseIf $counter = 2 Then
+					_ExcelWriteCell($oExcel, "2", $row, 23)
+				ElseIf $counter = 3 Then
+					_ExcelWriteCell($oExcel, "3", $row, 23)
+				ElseIf $counter = 4 Then
+					_ExcelWriteCell($oExcel, "4", $row, 23)
+				ElseIf $counter = 5 Then
+					_ExcelWriteCell($oExcel, "5", $row, 23)
+				ElseIf $counter = 6 Then
+					_ExcelWriteCell($oExcel, "6", $row, 23)
+				ElseIf $counter = 7 Then
+					_ExcelWriteCell($oExcel, "7", $row, 23)
+				ElseIf $counter = 8 Then
+					_ExcelWriteCell($oExcel, "8", $row, 23)
+				ElseIf $counter = 9 Then
+					_ExcelWriteCell($oExcel, "9", $row, 23)
+				ElseIf $counter = 10 Then
+					_ExcelWriteCell($oExcel, "10", $row, 23)
+				ElseIf $counter = 11 Then
+					_ExcelWriteCell($oExcel, "11", $row, 23)
+				ElseIf $counter = 12 Then
+					_ExcelWriteCell($oExcel, "12", $row, 23)
+				ElseIf $counter = 13 Then
+					_ExcelWriteCell($oExcel, "13", $row, 23)
+				ElseIf $counter = 14 Then
+					_ExcelWriteCell($oExcel, "14", $row, 23)
+				EndIf
+	Next
+		Local $counter = 0
+		$row = ($row + 1)
+WEnd
