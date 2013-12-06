@@ -1,0 +1,206 @@
+; * Copyright 2013 by Josh Pelak <joshpelak@gmail.com>
+; *
+; * Cellphone4U Customer Database and related code is free software: you can redistribute
+; * it and/or modify it under the terms of the GNU General Public
+; * License as published by the Free Software Foundation, either
+; * version 3 of the License, or (at your option) any later version.
+; *
+; * Cellphone4U Customer Database and related code is distributed in the hope that it will
+; * be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+; * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; * GNU General Public License for more details.
+; *
+; * You should have received a copy of the GNU General Public License
+; * along with Cellphone4U Customer Database and related code.  If not, see <http://www.gnu.org/licenses/>.
+
+#include <Excel.au3>
+#include <IE.au3>
+#include <File.au3>
+#include <String.au3>
+#include <Array.au3>
+#include <Date.au3>
+;################################################################
+;Weak password protect, CLOSES PROGRAM IF YOU DON'T KNOW WHAT YOUR DOING!!!
+$check_allowed = InputBox("Enter Password to Execute Program: ", "Enter Password to Execute Program: ", "", "*")
+If $check_allowed == "password" Then
+	;do nothing, allowed
+Else
+	MsgBox(0, "NOT ALLOWED!", "NOT ALLOWED!", 3)
+	Exit
+EndIf
+;#################################################################
+;#############################################
+;Global Variables:  					    ##
+Global $rowstart = 2 ;SET STARTING ROW  2   ##
+Global $rowend = 80; SET END ROW       84   ##
+;#############################################
+Global $sFilePath1 = @ScriptDir & "\Master Eligible Business PTNS.xlsx"; This file should already exist
+Global $oExcel = _ExcelBookOpen($sFilePath1)
+;###################
+;MAIN LOOP START  ##
+;###################
+For $row = $rowstart to $rowend Step 1
+	Global $global_row = $row
+	Local $lastname1 = _ExcelReadCell($oExcel, $row, 1)
+	Local $strip_no = (StringLen($lastname1) - 3)
+	Global $lastname = StringTrimRight($lastname1, $strip_no)
+	Global $accno = _ExcelReadCell($oExcel, $row, 2)
+	Call("open_Acc_Bypass", $lastname, $accno)
+	Sleep(500)
+Next
+	MsgBox(0, "Status: ", "FINISHED at " & $global_row, 5)
+	Exit
+
+;#############################################################################
+;Function get_biz_Model start
+;input: assumes logged into dara and snap
+;outputs: PTN, eligible date, model, and name on phone for biz accounts
+;#############################################################################
+Func get_biz_Model()
+;BIZ ACCOUNT IS OPEN
+;Get Customer Info into array
+$oIE = _IEAttach("Account Overview")
+$oLink = _IELinkGetCollection($oIE, 6); 6: click View All Lines
+_IEAction($oLink, "click")
+WinWait("Search Result")
+;~ $oIE1 = _IEAttach("Search Result")
+;~ $oTable = _IETableGetCollection($oIE1, 6); 6: gets table with Customers Info
+;~ $aTableData = _IETableWriteToArray($oTable, True)
+;~ local $1DArray[1]
+;~ For $i = 1 To UBound($aTableData) -1
+;~ 	For $a = 1 to 9 Step 2
+;~ 		_ArrayAdd($1DArray, $aTableData[$i][$a])
+;~ 	Next
+;~ Next
+;~ local $finalarray[1]
+;~ $a = 1
+;~ $string = ""
+;~ While $a < UBound($1DArray)
+;~ 	For $t = $a to ($a + 4)
+;~ 		$string = _ArrayToString($1DArray, "|", $t, ($t + 4))
+;~ 		_ArrayAdd($finalarray, $string)
+;~ 		ExitLoop
+;~ 	Next
+;~ 		$a = ($a + 5)
+;~ WEnd
+;_ExcelWriteArray($oExcel, $global_row, 9, $finalarray, 0, 1)
+;_ArrayDisplay($finalarray, "Final Array = ")
+;#########################
+;Write Address to Excel
+;#########################
+$oIE2 = _IEAttach("Search Result")
+$oLink = _IELinkGetCollection($oIE2, 3)
+_IEAction($oLink, "click")
+_IELoadWait($oIE2)
+local $address[1]
+$oIE3 = _IEAttach("Account Details")
+$oTable = _IETableGetCollection($oIE3, 4)
+$aTableData = _IETableWriteToArray($oTable, True)
+$address[0] = ($aTableData[2][0]&' '&$aTableData[3][0])
+;_ArrayDisplay($address)
+_ExcelWriteArray($oExcel, $global_row, 5, $address)
+;########################
+;Exit account overview ##
+;########################
+$oexit = _IEAttach("Search Result")
+_IENavigate($oexit, "javascript:dialog('https://dara.sprint.com/uniquesig8a944deffe2308894cbf3a294ac50cab/uniquesig1/exitAccountInit.do?userAction=1','width=350,height=380,resizable=1',true)", 0)
+Sleep(1000)
+ControlSend("Sprint -- Webpage Dialog", "","[CLASSNN:Internet Explorer_Server1]", "{TAB}" & "{ENTER}")
+WinWait("Customer Main")
+EndFunc
+;###################################
+;Function Start: open_acc_bypass  ##
+;Input: $lastname, $acc,          ##
+;Returns: opened account          ##
+;###################################
+Func open_Acc_Bypass($lastname1, $accno)
+WinWait("Customer Main")
+$oIE = _IEAttach("Customer Main")
+$biz_form = _IELinkGetCollection($oIE, 3); 2: consumer, 3: biz
+_IEAction($biz_form, "click")
+Sleep(1000)
+Local $oForm = _IEFormGetCollection($oIE, 1)
+Local $oQuery = _IEFormElementGetCollection($oForm, 4)
+_IEFormElementSetValue($oQuery, $lastname1)
+$oSelect = _IEFormElementGetObjByName($oForm, "option3")
+_IEFormElementOptionselect($oSelect, "Account Number" , 1, "byText")
+$oAcc = _IEFormElementGetObjByName($oForm, "option3Value")
+_IEFormElementSetValue($oAcc, $accno)
+_IEFormSubmit($oForm, 0)
+_IELoadWait($oIE)
+;#################################################################################################
+;Handle Business accounts / No data found error / Customer already exist with same SSN error	##
+;NO signInConfirmationForm for these error types												##
+;#################################################################################################
+Local $errorbody = _IEBodyReadHTML($oIE)
+If StringInStr($errorbody, "No data found") Then
+	Return
+ElseIf StringInStr($errorbody, "Account number not found") Then
+	Return
+ElseIf StringInStr($errorbody, "Customer already exist with the same SSN") Then
+	_ExcelWriteCell($oExcel, "Biz or Employee Acc", $global_row, 6)
+	Return
+ElseIf StringInStr($errorbody, "The account is suspended") Then
+	_ExcelWriteCell($oExcel, "Suspended Acc!", $global_row, 6)
+	Return
+ElseIf StringInStr($errorbody, "Incorrect length") Then
+	Return
+Else
+	_ExcelWriteCell($oExcel, "", $global_row, 6)
+EndIf
+;##############################
+;bypass security dialog box  ##
+;##############################
+$oPopup = _IEAttach("Sign In Confirmation -- Webpage Dialog", "embedded")
+If @error = $_IEStatus_NoMatch Then
+	Sleep(1000)
+	$oPopup = _IEAttach("Sign In Confirmation -- Webpage Dialog", "embedded")
+Endif
+_IELinkClickByIndex($oPopup, 1); clicks bypass link
+Sleep(1000)
+;#########################################################
+;input ID and expiration date to bypass and submit form ##
+;#########################################################
+$oForm = _IEGetObjById($oPopup, "signInConfirmationForm")
+$oID = _IEFormElementGetObjByName($oForm, "idNumber")
+_IEFormElementSetValue($oID, "420784384")
+$oEXP = _IEFormElementGetObjByName($oForm, "idExpirationDate")
+_IEFormElementSetValue($oEXP, "07/11/2016")
+$oSelect = _IEFormElementGetObjByName($oForm, "idType")
+_IEFormElementOptionselect($oSelect, "State ID #", 1, "bytext")
+;_IEFormElementOptionselect($oForm, "US Driver License", 1, "bytext")
+Sleep(500)
+;##########################################################
+;dirty ish method to click hidden OK javascript button  ###
+;##########################################################
+ControlSend("Sign In Confirmation -- Webpage Dialog", "","[CLASSNN:Internet Explorer_Server1]", "{TAB}" & "{TAB}" & "{TAB}" & "{TAB}" & "{TAB}" & "{TAB}" & "{ENTER}")
+;####################
+;Acc should be open #
+;####################
+_IELoadWait($oIE)
+;############################################
+;Handle lookup errors					   ##
+;Errors occur after signInConfirmationForm ##
+;############################################
+If WinExists("Customer Main") Then
+	$oIE1 = _IEAttach("Customer Main")
+	Local $body1 = _IEBodyReadHTML($oIE1)
+	If StringInStr($body1, "The transaction may not be performed") Then; past due customer
+		_ExcelWriteCell($oExcel, "PAST DUE!", $global_row, 6)
+		Return
+	ElseIf StringInStr($body1, "Ban status") Then; non existent customer
+		_ExcelWriteCell($oExcel, "CANCELLED ACC!", $global_row, 6)
+		Return
+	ElseIf StringInStr($body1, "No data found") Then; business acc or other non existent error
+		_ExcelWriteCell($oExcel, "BIZ or ERROR", $global_row, 6)
+		Return
+	ElseIf StringInStr($body1, "Activation of subscribers") Then
+		_ExcelWriteCell($oExcel, "2X Family Plan", $global_row, 6)
+		Return
+	Else
+		_ExcelWriteCell($oExcel, "", $global_row, 6)
+	EndIf
+Else
+	call("get_biz_Model")
+EndIf
+EndFunc
