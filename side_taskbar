@@ -1,0 +1,125 @@
+#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_Outfile_type=a3x
+#AutoIt3Wrapper_Add_Constants=n
+#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
+; *  Copyright 2014 by Josh Pelak <joshpelak@gmail.com>
+; *
+; * Cellphone4U Customer Database and related code is free software: you can redistribute
+; * it and/or modify it under the terms of the GNU General Public
+; * License as published by the Free Software Foundation, either
+; * version 3 of the License, or (at your option) any later version.
+; *
+; * Cellphone4U Customer Database and related code is distributed in the hope that it will
+; * be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+; * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; * GNU General Public License for more details.
+; *
+; * You should have received a copy of the GNU General Public License
+; * along with Cellphone4U Customer Database and related code.  If not, see <http://www.gnu.org/licenses/>.
+#include <IE.au3>
+#include <Excel.au3>
+#include <Word.au3>
+#include <File.au3>
+#include <Array.au3>
+#include <Date.au3>
+#include <Misc.au3>
+#include <ButtonConstants.au3>
+#include <GUIConstantsEx.au3>
+#include <StaticConstants.au3>
+#include <WindowsConstants.au3>
+#include <WinAPI.au3>
+
+;Function for running other Autoit scripts from here
+Func _RunAU3($sFilePath, $sWorkingDir = "", $iShowFlag = @SW_SHOW, $iOptFlag = 0)
+    Return Run('"' & @AutoItExe & '" /AutoIt3ExecuteScript "' & $sFilePath & '"', $sWorkingDir, $iShowFlag, $iOptFlag)
+EndFunc
+
+;change desktop working area first!
+_RunAU3("change desktop working area.au3")
+
+#Region ### START Koda GUI section ###
+$launcher = GUICreate("GUI-Taskbar", 100, (@DesktopHeight-29), (@DesktopWidth-100), 100, $WS_POPUP, BitOR($WS_EX_TOPMOST, $WS_EX_LAYERED, $WS_EX_TOOLWINDOW))
+GUISetBkColor(0xABCDEF)
+;WinSetTrans("Form1", "", 215)
+$login = GUICtrlCreateIcon(@ScriptDir & "\Icons\login.ico", "login.ico", 5, 9, 89, 89)
+$buyback = GUICtrlCreateIcon(@ScriptDir & "\Icons\buyback.ico", "buyback.ico", 5, 104, 89, 89)
+$precash = GUICtrlCreateIcon(@ScriptDir & "\Icons\precash.ico", "precash.ico", 5, 194, 89, 89)
+$receipt = GUICtrlCreateIcon(@ScriptDir & "\Icons\receipt.ico", "receipt.ico", 5, 289, 89, 89)
+$discount = GUICtrlCreateIcon(@ScriptDir & "\Icons\discount.ico", "discount.ico", 5, 390, 89, 89)
+$documents = GUICtrlCreateIcon(@ScriptDir & "\Icons\documents.ico", "documents.ico", 5, 481, 89, 89)
+$opendb = GUICtrlCreateIcon(@ScriptDir & "\Icons\opendb.ico", "opendb.ico", 5, 570, 89, 89)
+$advanced = GUICtrlCreateIcon(@ScriptDir & "\Icons\advanced.ico", "advanced.ico", 5, 665, 89, 89)
+_WinAPI_SetLayeredWindowAttributes($launcher, 0xABCDEF, 250)
+GUISetState(@SW_SHOW)
+#EndRegion ### END Koda GUI section ###
+
+While 1
+	$nMsg = GUIGetMsg()
+	Switch $nMsg
+		Case $GUI_EVENT_CLOSE
+			Exit
+		Case $login
+			$t = MsgBox (262148, "Are You Josh" ,"")
+				If $t = 6 Then; yes
+					_RunAU3("Login to DARA and SNAP.au3")
+				ElseIf $t = 7 Then; no
+					_RunAU3("Login to DARA and SNAP - Rox - Front.au3")
+				EndIf
+		Case $buyback
+			SplashTextOn("Title", "Loading BuyBack Website...", -1, 60, -1, -1, 1, "", 24, 700)
+			ShellExecute("http://partner.sprinterecycling.com/login.htm")
+			Do
+				sleep(500)
+			Until WinExists("eRecyclingCorps")
+			SplashOff()
+		Case $precash
+			SplashTextOn("Title", "Loading PreCash Website...", -1, 60, -1, -1, 1, "", 24, 700)
+			ShellExecute("https://customer.precash.com/merchant/")
+			Do
+				sleep(500)
+			Until WinExists("PreCash")
+			SplashOff()
+		Case $receipt
+			SplashTextOn("Title", "Opening Blank Receipt Now...", -1, 60, -1, -1, 1, "", 24, 700)
+			Local $sFilePath1 = @ScriptDir & "\Documents\Blank Receipt.xltx" ;This file should already exist
+			Local $oExcel = _ExcelBookOpen($sFilePath1)
+			sleep(1000)
+			SplashOff()
+		Case $discount
+			SplashTextOn("Title", "Loading Discount Website...", -1, 60, -1, -1, 1, "", 24, 700)
+			$hndIE = WinGetHandle("[Class:IEFrame]")
+				If Not ishwnd($hndIE) Then
+;~ 					MsgBox(0, "no IE window open!", "")
+ 					Run("C:\Program Files (x86)\Internet Explorer\iexplore.exe")
+;~ 					WinWaitActive("[Class:IEFrame]")
+;~ 					$hndIE1 = WinGetHandle("[Class:IEFrame]")
+;~ 					$IEBrowser = _IEAttach($hndIE1, "HWND")
+					WinWait("DARA", "", 30)
+					$IEBrowser = _IEAttach("DARA", "WindowTitle")
+					_IENavigate($IEBrowser, "https://www.sprint.com/verify"); open in first tab of new browser window
+				Else
+					;MsgBox(0, "IE Window found!", "")
+					$IEBrowser = _IEAttach($hndIE, "HWND")
+					__IENavigate($IEBrowser, "https://www.sprint.com/verify", 0, 2048); open in new tab function __IENavigate
+				EndIf
+			Do
+				sleep(500)
+			Until WinExists("Sprint - Sprint Discount Request")
+			SplashOff()
+		Case $documents
+			ShellExecute("E:\Dropbox\Autoit\Documents")
+		Case $opendb
+			_RunAU3("Customer Database OPEN.au3")
+		Case $advanced
+			;################################################################
+			;Weak password protect, CLOSES PROGRAM IF YOU DON'T KNOW WHAT YOUR DOING!!!
+			$check_allowed = InputBox("Enter Password to Execute Program: ", "Enter Password to Execute Program: ", "", "*", 250, 190, @DesktopWidth/2, @DesktopHeight/2, 20, GUICreate("", 0, 0, 0, 0, Default, 8))
+				If $check_allowed == "paS1qDjuzu" Then
+					_RunAU3("Customer Database Tools GUI.au3")
+				Else
+					MsgBox(262144, "NOT ALLOWED!", "NOT ALLOWED!", 3)
+					;do nothing
+				EndIf
+	EndSwitch
+WEnd
+
