@@ -1,4 +1,4 @@
-; * Copyright 2013 by Josh Pelak <joshpelak@gmail.com>
+; * Copyright 2014 by Josh Pelak <joshpelak@gmail.com>
 ; *
 ; * Cellphone4U Customer Database and related code is free software: you can redistribute
 ; * it and/or modify it under the terms of the GNU General Public
@@ -13,6 +13,9 @@
 ; * You should have received a copy of the GNU General Public License
 ; * along with Cellphone4U Customer Database and related code.  If not, see <http://www.gnu.org/licenses/>.
 
+;==============================================================================
+;This script will get ptn name ptn model eligibility plan and write to excel ==
+;==============================================================================
 #include <Excel.au3>
 #include <IE.au3>
 #include <File.au3>
@@ -21,8 +24,8 @@
 #include <Date.au3>
 ;################################################################
 ;Weak password protect, CLOSES PROGRAM IF YOU DON'T KNOW WHAT YOUR DOING!!!
-$check_allowed = InputBox("Enter Password to Execute Program: ", "Enter Password to Execute Program: ", "", "*")
-If $check_allowed == "password" Then
+$check_allowed = InputBox("Enter Password to Execute Program: ", "Enter Password to Execute Program: ", "", "*", 250, 190, @DesktopWidth/2, @DesktopHeight/2, 20, GUICreate("", 0, 0, 0, 0, Default, 8))
+If $check_allowed == "some_password" Then
 	;do nothing, allowed
 Else
 	MsgBox(0, "NOT ALLOWED!", "NOT ALLOWED!", 3)
@@ -34,7 +37,7 @@ EndIf
 Global $rowstart = 2 ;SET STARTING ROW  2   ##
 Global $rowend = 80; SET END ROW       84   ##
 ;#############################################
-Global $sFilePath1 = @ScriptDir & "\Master Eligible Business PTNS.xlsx"; This file should already exist
+Global $sFilePath1 = @ScriptDir & "\Excel\Master Eligible Business PTNS.xlsx"; This file should already exist
 Global $oExcel = _ExcelBookOpen($sFilePath1)
 ;###################
 ;MAIN LOOP START  ##
