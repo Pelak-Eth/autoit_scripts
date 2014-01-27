@@ -1,4 +1,4 @@
-; * Copyright 2013 by Josh Pelak <joshpelak@gmail.com>
+; * Copyright 2014 by Josh Pelak <joshpelak@gmail.com>
 ; *
 ; * Cellphone4U Customer Database and related code is free software: you can redistribute
 ; * it and/or modify it under the terms of the GNU General Public
@@ -13,32 +13,35 @@
 ; * You should have received a copy of the GNU General Public License
 ; * along with Cellphone4U Customer Database and related code.  If not, see <http://www.gnu.org/licenses/>.
 
+;=====================================================================================
+;This script will get: ptn name ptn model eligibility plan and then write to excel  ==
+;=====================================================================================
 #include <Excel.au3>
 #include <IE.au3>
 #include <File.au3>
 #include <String.au3>
 #include <Array.au3>
 #include <Date.au3>
-;################################################################
+;================================================================
 ;Weak password protect, CLOSES PROGRAM IF YOU DON'T KNOW WHAT YOUR DOING!!!
-$check_allowed = InputBox("Enter Password to Execute Program: ", "Enter Password to Execute Program: ", "", "*")
-If $check_allowed == "password" Then
+$check_allowed = InputBox("Enter Password to Execute Program: ", "Enter Password to Execute Program: ", "", "*", 250, 190, @DesktopWidth/2, @DesktopHeight/2, 20, GUICreate("", 0, 0, 0, 0, Default, 8))
+If $check_allowed == "some_password" Then
 	;do nothing, allowed
 Else
 	MsgBox(0, "NOT ALLOWED!", "NOT ALLOWED!", 3)
 	Exit
 EndIf
-;#################################################################
-;#############################################
-;Global Variables:  					    ##
-Global $rowstart = 2 ;SET STARTING ROW    2 ##
-Global $rowend = 789; SET END ROW       808 ##
-;#############################################
-Global $sFilePath1 = @ScriptDir & "\Master Eligible PTNS.xlsx"; "\Eligible Business PTNS.xlsx"; This file should already exist
+;=================================================================
+;=============================================
+;Global Variables:  					    ==
+Global $rowstart = 2 ;SET STARTING ROW    2 ==
+Global $rowend = 789; SET END ROW       808 ==
+;=============================================
+Global $sFilePath1 = @ScriptDir & "\Excel\Master Eligible PTNS.xlsx"; "\Eligible Business PTNS.xlsx"; This file should already exist
 Global $oExcel = _ExcelBookOpen($sFilePath1)
-;###################
-;MAIN LOOP START  ##
-;###################
+;===================
+;MAIN LOOP START  ==
+;===================
 For $row = $rowstart to $rowend Step 1
 	Global $global_row = $row
 	Local $lastname1 = _ExcelReadCell($oExcel, $row, 1)
@@ -47,14 +50,15 @@ For $row = $rowstart to $rowend Step 1
 	Global $accno = _ExcelReadCell($oExcel, $row, 2)
 	Call("open_Acc_Bypass", $lastname, $accno)
 	Sleep(500)
+	_ExcelWriteCell($oExcel, $global_row, 2, 20)
 Next
 	MsgBox(0, "Status: ", "FINISHED at " & $global_row)
 	Exit
-;############################################################
+;============================================================
 ;Function get_Model start
 ;input: assumes logged into dara and snap
 ;outputs: PTN, eligible date, model, and name on phone
-;############################################################
+;============================================================
 Func get_Model()
 WinWait("Account Overview")
 Local $oIE = _IEAttach("Account Overview")
@@ -62,9 +66,9 @@ Local $body = _IEBodyReadHTML($oIE)
 Local $iwant[14]
 Local $text = StringReplace($body, "option value", "option value")
 Local $range = (@extended);gets length of dropdown list, -1 now causes no single line accounts to parse
-;##############################
-;Find and write plan to excel #
-;##############################
+;==============================
+;Find and write plan to excel =
+;==============================
 If StringInStr($body, "Everything Data") Then
 	_ExcelWriteCell($oExcel, "DATA", $global_row, 3)
 ElseIf StringInStr($body, "Everything Data") And StringInStr($body, "Credit Union") Then
@@ -177,20 +181,20 @@ For $i = 0 to $range Step 1
 Next
 	;_ArrayDisplay($iwant, "I want = ")
 	_ExcelWriteArray($oExcel, $global_row, 4, $iwant, 0, 0)
-;########################
-;Exit account overview ##
-;########################
+;========================
+;Exit account overview ==
+;========================
 	$oexit = _IEAttach("Account Overview")
 	_IENavigate($oexit, "javascript:dialog('https://dara.sprint.com/uniquesig8a944deffe2308894cbf3a294ac50cab/uniquesig1/exitAccountInit.do?userAction=1','width=350,height=380,resizable=1',true)", 0)
 	Sleep(1000)
 	ControlSend("Sprint -- Webpage Dialog", "","[CLASSNN:Internet Explorer_Server1]", "{TAB}" & "{ENTER}")
 	WinWait("Customer Main")
 EndFunc
-;###################################
-;Function Start: open_acc_bypass  ##
-;Input: $lastname, $acc,          ##
-;Returns: opened account          ##
-;###################################
+;===================================
+;Function Start: open_acc_bypass  ==
+;Input: $lastname, $acc,          ==
+;Returns: opened account          ==
+;===================================
 Func open_Acc_Bypass($lastname1, $accno)
 WinWait("Customer Main")
 $oIE = _IEAttach("Customer Main")
@@ -203,10 +207,10 @@ $oAcc = _IEFormElementGetObjByName($oForm, "option3Value")
 _IEFormElementSetValue($oAcc, $accno)
 _IEFormSubmit($oForm, 0)
 _IELoadWait($oIE)
-;#################################################################################################
-;Handle Business accounts / No data found error / Customer already exist with same SSN error	##
-;NO signInConfirmationForm for these error types												##
-;#################################################################################################
+;=================================================================================================
+;Handle Business accounts / No data found error / Customer already exist with same SSN error	==
+;NO signInConfirmationForm for these error types												==
+;=================================================================================================
 Local $errorbody = _IEBodyReadHTML($oIE)
 If StringInStr($errorbody, "No data found") Then
 	Return
@@ -223,9 +227,9 @@ ElseIf StringInStr($errorbody, "Incorrect length") Then
 Else
 	_ExcelWriteCell($oExcel, "", $global_row, 22)
 EndIf
-;##############################
-;bypass security dialog box  ##
-;##############################
+;==============================
+;bypass security dialog box  ==
+;==============================
 $oPopup = _IEAttach("Sign In Confirmation -- Webpage Dialog", "embedded")
 If @error = $_IEStatus_NoMatch Then
 	Sleep(1000)
@@ -233,30 +237,30 @@ If @error = $_IEStatus_NoMatch Then
 Endif
 _IELinkClickByIndex($oPopup, 1); clicks bypass link
 Sleep(1000)
-;#########################################################
-;input ID and expiration date to bypass and submit form ##
-;#########################################################
+;=========================================================
+;input ID and expiration date to bypass and submit form ==
+;=========================================================
 $oForm = _IEGetObjById($oPopup, "signInConfirmationForm")
 $oID = _IEFormElementGetObjByName($oForm, "idNumber")
 _IEFormElementSetValue($oID, "420784384")
 $oEXP = _IEFormElementGetObjByName($oForm, "idExpirationDate")
 _IEFormElementSetValue($oEXP, "07/11/2016")
 $oSelect = _IEFormElementGetObjByName($oForm, "idType")
-_IEFormElementOptionselect($oSelect, "State ID #", 1, "bytext")
+_IEFormElementOptionselect($oSelect, "State ID =", 1, "bytext")
 ;_IEFormElementOptionselect($oForm, "US Driver License", 1, "bytext")
 Sleep(500)
-;##########################################################
-;dirty ish method to click hidden OK javascript button  ###
-;##########################################################
+;==========================================================
+;dirty ish method to click hidden OK javascript button  ===
+;==========================================================
 ControlSend("Sign In Confirmation -- Webpage Dialog", "","[CLASSNN:Internet Explorer_Server1]", "{TAB}" & "{TAB}" & "{TAB}" & "{TAB}" & "{TAB}" & "{TAB}" & "{ENTER}")
-;####################
-;Acc should be open #
-;####################
+;====================
+;Acc should be open =
+;====================
 _IELoadWait($oIE)
-;############################################
-;Handle lookup errors					   ##
-;Errors occur after signInConfirmationForm ##
-;############################################
+;============================================
+;Handle lookup errors					   ==
+;Errors occur after signInConfirmationForm ==
+;============================================
 If WinExists("Customer Main") Then
 	$oIE1 = _IEAttach("Customer Main")
 	Local $body1 = _IEBodyReadHTML($oIE1)
