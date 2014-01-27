@@ -1,4 +1,4 @@
-; *  Copyright 2013 by Josh Pelak <joshpelak@gmail.com>
+; *  Copyright 2014 by Josh Pelak <joshpelak@gmail.com>
 ; *
 ; * Cellphone4U Customer Database and related code is free software: you can redistribute
 ; * it and/or modify it under the terms of the GNU General Public
@@ -20,18 +20,17 @@
 #include <StaticConstants.au3>
 #include <WindowsConstants.au3>
 #include <Misc.au3>
-;##################################################################
-;### SET YOUR HOMEPAGE IN INTERNET EXPLORER TO DARA LOGIN PAGE!! ##
-;Example: "https://dara.sprint.com/uniquesigaXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/uniquesig1/secured_site/index_frame.jsp"
 ;###################################################
 ;DEFAULT GUI and CONFIGURATION VARIABLES############
-$userfirstname = "XXXXXXXXXX"
-$userlastname = "XXXXXXXXXX"
-$firstdarauser = "XXXXXXXX"
-$firstdarapass = "XXXXXXXXXX"
-$seconddarauser = "XXXXXXXX"
-$seconddarapass = "XXXXXXXXXX"
-$snapurl = "https://dara.sprint.com/uniquesigXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/uniquesig1"
+$daraloginurl = "https://dara.sprint.com/"; CURRENTLY SET AS HOMEPAGE
+$snapurl = "https://dara.sprint.com/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+$userfirstname = "Name"
+$userlastname = "Lastname"
+$firstdarauser = "XXXXXX"
+$firstdarapass = IniRead(@ScriptDir & "\login_variables.ini", "LOGIN", "firstdarapass", "RETYPE")
+$seconddarauser = "XXXXXX"
+$seconddarapass = IniRead(@ScriptDir & "\login_variables.ini", "LOGIN", "seconddarapass", "RETYPE")
+;###################################################
 ;##########################
 ;Allow only one instance ##
 ;##########################
@@ -39,7 +38,7 @@ If _Singleton("Login to DARA and SNAP", 0) = 0 Then
     Exit
 EndIf
 #Region ; GUI START
-$Form1_1 = GUICreate("Form1", (@DesktopWidth-70), @DesktopHeight, 0, 0, $WS_SYSMENU, BitOR($WS_EX_TOPMOST, $WS_EX_TOOLWINDOW))
+$Form1_1 = GUICreate("Form1", (@DesktopWidth-100), (@DesktopHeight-36), 0, 0, $WS_SYSMENU, BitOR($WS_EX_TOPMOST, $WS_EX_TOOLWINDOW))
 WinSetTrans($Form1_1, "", 215)
 $FirstName = GUICtrlCreateInput($userfirstname, 368, 80, 137, 37)
 GUICtrlSetFont(-1, 18, 400, 0, "MS Sans Serif")
@@ -96,11 +95,25 @@ While 1
 		Case $GUI_EVENT_CLOSE
 			Exit
 		Case $Checkbox1
-			$DARA_pass_1 = GUICtrlRead($DARA_1_pass)
-			;_FileWriteToLine() @TODO make config / passwords file
+			If _IsChecked($Checkbox1) Then
+				;MsgBox(0, "", "The checkbox is checked.")
+				$DARA_pass_1 = GUICtrlRead($DARA_1_pass)
+				IniWrite(@scriptdir & "\login_variables.ini", "LOGIN", "firstdarapass", '"'&$DARA_pass_1&'"')
+				MsgBox(4096, "WV171859", "Password Changed to: " & @CRLF & $DARA_pass_1, 5)
+			Else
+				;MsgBox(0, "", "The checkbox is not checked.")
+				;do nothing
+			EndIf
 		Case $Checkbox2
-			$DARA_pass_2 = GUICtrlRead($DARA_2_pass)
-			;_FileWriteToLine() @TODO make config / passwords file
+			If _IsChecked($Checkbox2) Then
+				;MsgBox(0, "", "The checkbox is checked.")
+				$DARA_pass_2 = GUICtrlRead($DARA_2_pass)
+				IniWrite(@scriptdir & "\login_variables.ini", "LOGIN", "seconddarapass", '"'&$DARA_pass_2&'"')
+				MsgBox(4096, "VG639336", "Password Changed to: " & @CRLF & $DARA_pass_2, 5)
+			Else
+				;MsgBox(0, "", "The checkbox is not checked.")
+				;do nothing
+			EndIf
 		Case $Submit
 			local $failed = 0
 			Global $FirstName1 = GUICtrlRead($FirstName)
@@ -118,6 +131,10 @@ While 1
 			Exit
 	EndSwitch
 WEnd
+;####check if checked box
+Func _IsChecked($iControlID)
+    Return BitAND(GUICtrlRead($iControlID), $GUI_CHECKED) = $GUI_CHECKED
+EndFunc   ;==>_IsChecked
 ;###################################################################
 ;Function login start, no input, returns: logged in dara and snap ##
 ;###################################################################
@@ -231,9 +248,3 @@ If WinExists("New Edition") Then
 	_IEQuit($popup)
 EndIf
 EndFunc
-; UNUSED SNIPPET, Use for handling errors with finding objects
-;~ 			If @error <> 0 Then
-;~ 				Global $failed = 1
-;~ 				MsgBox(262144, "ERROR 3 or 7 Encountered!", "RESTARTING LOGIN NOW", 2)
-;~ 				Return
-;~ 			EndIf
