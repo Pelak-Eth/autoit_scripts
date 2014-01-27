@@ -1,0 +1,57 @@
+; WinUser.h
+Global Const $SPI_SETWORKAREA                = 0x002F
+Global Const $SPI_GETWORKAREA                = 0x0030
+
+Global Const $SPIF_UPDATEINIFILE             = 0x0001
+Global Const $SPIF_SENDWININICHANGE          = 0x0002
+Global Const $SPIF_SENDCHANGE                = $SPIF_SENDWININICHANGE
+
+;MsgBox (0, _SetWorkArea (-1, -1, -1, -1), @Error) ;change back to default
+;#################################################################
+;CHANGE THE DESKTOP WORKING AREA HERE
+;           LEFT, TOP,      RIGHT,          BOTTOM
+_SetWorkArea(-1, -1, (@DesktopWidth-100), (@DesktopHeight-28))
+;#################################################################
+
+Func _SetWorkArea ($iLeft = -1, $iTop = -1, $iRight = -1, $iBottom = -1)
+    Local $aResult, $rect = DllStructCreate ("int[4]"), $pRect = DllStructGetPtr ($rect)
+
+   ; Change -1's
+   If $iLeft = -1 Then $iLeft = 0
+   If $iTop = -1 Then $iTop = 0
+   If $iRight = -1 Then $iRight = @DesktopWidth + 0
+   If $iBottom = -1 Then $iBottom = @DesktopHeight + 0
+
+   ; Set struct data
+   DllStructSetData ($rect, 1, $iLeft  , 1)     ;left
+   DllStructSetData ($rect, 1, $iTop   , 2)     ;top
+   DllStructSetData ($rect, 1, $iRight , 3)     ;right
+   DllStructSetData ($rect, 1, $iBottom, 4)     ;bottom
+
+   ; Set the area
+    $aResult = DllCall("user32.dll", _
+                      "int", "SystemParametersInfo", _
+                      "int", $SPI_SETWORKAREA, _
+                      "int", 0, _
+                      "ptr", $pRect, _
+                      "int", $SPIF_SENDCHANGE)
+
+    If @error Then Return SetError(@error, 0, False)
+    Return $aResult[0] <> 0
+EndFunc ; ==>
+
+;~ ;Minimize and then maximize all visible windows to fix taskbar being overlapped by windows.
+;~ $var = WinList()
+;~ For $i = 1 to $var[0][0]   ; Only display visble windows that have a title
+;~ 	If $var[$i][0] <> "GUI-Taskbar" Or "" AND IsVisible($var[$i][1]) Then
+;~ 		WinSetState($var[$i][0],"", @SW_MINIMIZE)
+;~ 		WinSetState($var[$i][0],"", @SW_MAXIMIZE)
+;~ 	EndIf
+;~ Next
+;~ Func IsVisible($handle)
+;~ 	If BitAnd( WinGetState($handle), 2 ) Then
+;~ 		Return 1
+;~ 	Else
+;~ 		Return 0
+;~ 	EndIf
+;~ EndFunc
